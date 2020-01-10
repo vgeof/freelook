@@ -19,7 +19,7 @@ class ElectronOutlook {
     if (!lock) {
       app.quit()
     } else {
-      app.on('second-instance', (event, commandLine, workingDirectory) => {
+      app.on('second-instance', (_event, _commandLine, _workingDirectory) => {
         if (this.mailController) this.mailController.show()
       })
 

@@ -1,12 +1,13 @@
 const { app, BrowserWindow, shell, ipcMain } = require('electron');
 const settings = require('electron-settings');
-const CssInjector = require('../js/css-injector');
+const CssInjector = require('../mainProcess/css-injector');
 const path = require('path');
 const fs = require('fs-extra');
 const isOnline = require('is-online');
 
 const settingsExist = fs.existsSync(`${app.getPath('userData')}/Settings`);
-const homepageUrl = settingsExist ? settings.get('homepageUrl', 'https://outlook.live.com/mail') : 'https://outlook.live.com/mail';
+// const homepageUrl = settingsExist ? settings.get('homepageUrl', 'https://outlook.live.com/mail') : 'https://outlook.live.com/mail';
+const homepageUrl = 'https://login.live.com/login.srf'
 const deeplinkUrls = ['outlook.live.com/mail/deeplink', 'outlook.office365.com/mail/deeplink', 'outlook.office.com/mail/deeplink'];
 const outlookUrls = ['outlook.live.com', 'outlook.office365.com', 'outlook.office.com'];
 
@@ -29,7 +30,10 @@ class MailWindowController {
             frame: showWindowFrame,
             autoHideMenuBar: true,
             show: false,
-            icon: path.join(__dirname, '../../assets/outlook_linux_black.png')
+            icon: path.join(__dirname, '../../assets/outlook_linux_black.png'),
+            webPreferences:{
+                preload: path.resolve(__dirname,'..','browser','main.js'),
+            			nativeWindowOpen: true,nodeIntegration:false}
         });
 
         // and load the index.html of the app.
@@ -39,16 +43,17 @@ class MailWindowController {
         ipcMain.on('show', () => {
             this.show()
         });
+        this.show();
 
         // insert styles
-        this.win.webContents.on('dom-ready', () => {
-            this.win.webContents.insertCSS(CssInjector.main);
-            if (!showWindowFrame) this.win.webContents.insertCSS(CssInjector.noFrame);
+        //this.win.webContents.on('dom-ready', () => {
+        //    this.win.webContents.insertCSS(CssInjector.main);
+        //    if (!showWindowFrame) this.win.webContents.insertCSS(CssInjector.noFrame);
 
-            this.addUnreadNumberObserver();
+        //    //this.addUnreadNumberObserver();
 
-            this.win.show()
-        });
+        //    this.win.show()
+        //});
 
         // prevent the app quit, hide the window instead.
         this.win.on('close', (e) => {
