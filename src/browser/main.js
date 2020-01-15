@@ -1,13 +1,13 @@
 (function() {
   const { ipcRenderer, remote } = require("electron");
-  document.addEventListener("emailPrompt", fillEmail);
+  ipcRenderer.on("fillEmail", (_, arg) => fillEmail(arg));
   window.setInterval(function() {
     console.log("heartbeat...");
     createEvents();
   }, 1000);
 
-  function fillEmail() {
-    const email = "test@outlook.fr";
+  function fillEmail(email) {
+    console.log("filling Email");
     findEmailInput().value = email;
     if (findEmailInput().value === email) {
       console.log(findNextButton());
@@ -18,8 +18,8 @@
   function createEvents() {
     // dispatch an event when the login screen asking for email appears
     if (isLoginPage() && findEmailInput()) {
-      var emailPrompt = new Event("emailPrompt");
-      document.dispatchEvent(emailPrompt);
+      const reply = ipcRenderer.send("emailPrompt");
+      console.log(reply);
     }
   }
   function isLoginPage() {
