@@ -16,10 +16,17 @@
     }
   }
   function createEvents() {
-    // dispatch an event when the login screen asking for email appears
-    if (isLoginPage() && findEmailInput()) {
+    // send an event when the login screen asking for email appears
+    if (!!isLoginPage() && !!findEmailInput()) {
       const reply = ipcRenderer.send("emailPrompt");
       console.log(reply);
+    }
+    // send an event when a notification for an event appears
+    if (!!findNotificationPopup()) {
+      console.log("Notification poupup found");
+      content = findNotificationPopup();
+      console.log(content);
+      ipcRenderer.send("eventNotification", content.innerText);
     }
   }
   function isLoginPage() {
@@ -30,5 +37,24 @@
   }
   function findNextButton() {
     return document.querySelector("input[type=submit]");
+  }
+  function findNotificationPopup() {
+    // OWA 2010
+    popup = document.querySelector("#spnRmT.alertBtnTxt");
+    if (!!popup) return popup;
+    // OWA 2013
+    popup = document.querySelector("[aria-label='New Notification']");
+    if (!!popup) return popup;
+    // 365 new check
+    popup = document.querySelector(
+      ".o365cs-notifications-notificationPopup .o365cs-notifications-notificationHeaderText"
+    );
+    if (!!popup) return popup;
+    // 365 old check
+    popup = document.querySelector(".o365cs-notifications-notificationCounter");
+    if (!!popup) return popup;
+    // outlook.live.com beta
+    popup = document.querySelector('[data-storybook="reminder"]');
+    if (!!popup) return popup;
   }
 })();

@@ -1,4 +1,10 @@
-const { app, BrowserWindow, shell, ipcMain } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  shell,
+  ipcMain,
+  Notification
+} = require("electron");
 const settings = require("electron-settings");
 const CssInjector = require("../mainProcess/css-injector");
 const path = require("path");
@@ -7,7 +13,7 @@ const isOnline = require("is-online");
 
 const settingsExist = fs.existsSync(`${app.getPath("userData")}/Settings`);
 // const homepageUrl = settingsExist ? settings.get('homepageUrl', 'https://outlook.live.com/mail') : 'https://outlook.live.com/mail';
-const homepageUrl = "https://login.live.com/login.srf";
+const homepageUrl = "https://outlook.live.com/login.srf/?nlp=1";
 const deeplinkUrls = [
   "outlook.live.com/mail/deeplink",
   "outlook.office365.com/mail/deeplink",
@@ -83,6 +89,18 @@ class MailWindowController {
     ipcMain.on("emailPrompt", (event, _) =>
       event.sender.send("fillEmail", "test@outlook.fr")
     );
+    let firstTime = true;
+    ipcMain.on("eventNotification", (_, arg) => {
+      if (firstTime) {
+        let notif = new Notification({
+          title: "New notif",
+          subtitle: "Outlook",
+          body: arg
+        });
+        notif.show();
+        firstTime = false;
+      }
+    });
 
     // Open the new window in external browser
     this.win.webContents.on("new-window", this.openInBrowser);
