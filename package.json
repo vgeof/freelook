@@ -29,7 +29,8 @@
   "dependencies": {
     "electron-settings": "^3.2.0",
     "fs-extra": "^5.0.0",
-    "is-online": "^8.2.0"
+    "is-online": "^8.2.0",
+    "node-notifier": "^6.0.0"
   },
   "build": {
     "appId": "nz.co.enkru.${name}",

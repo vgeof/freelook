@@ -3,8 +3,10 @@ const {
   BrowserWindow,
   shell,
   ipcMain,
-  Notification
+  Notification,
+  Session
 } = require("electron");
+const notifier = require("node-notifier");
 const settings = require("electron-settings");
 const CssInjector = require("../mainProcess/css-injector");
 const path = require("path");
@@ -13,7 +15,7 @@ const isOnline = require("is-online");
 
 const settingsExist = fs.existsSync(`${app.getPath("userData")}/Settings`);
 // const homepageUrl = settingsExist ? settings.get('homepageUrl', 'https://outlook.live.com/mail') : 'https://outlook.live.com/mail';
-const homepageUrl = "https://outlook.live.com/login.srf/?nlp=1";
+const homepageUrl = "https://outlook.live.com/";
 const deeplinkUrls = [
   "outlook.live.com/mail/deeplink",
   "outlook.office365.com/mail/deeplink",
@@ -51,6 +53,9 @@ class MailWindowController {
         nodeIntegration: false
       }
     });
+    this.win.webContents.setUserAgent(
+      "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko/20100101 Firefox/72.0"
+    );
 
     // and load the index.html of the app.
     this.win.loadURL(homepageUrl);
@@ -86,19 +91,34 @@ class MailWindowController {
       // when you should delete the corresponding element.
       this.win = null;
     });
-    ipcMain.on("emailPrompt", (event, _) =>
-      event.sender.send("fillEmail", "test@outlook.fr")
-    );
-    let firstTime = true;
+    ipcMain.on("emailPrompt", (event, _) => {
+      const email = settings.get("default-email");
+      event.sender.send("fillEmail", email);
+    });
+    let alreadyDisplayed = [];
     ipcMain.on("eventNotification", (_, arg) => {
-      if (firstTime) {
-        let notif = new Notification({
-          title: "New notif",
-          subtitle: "Outlook",
-          body: arg
-        });
-        notif.show();
-        firstTime = false;
+      console.log(alreadyDisplayed);
+      const splitted = arg.split("\n");
+      const title = splitted[0];
+
+      if (!alreadyDisplayed.includes(title)) {
+        console.log("sending notification ");
+        notifier
+          .notify(
+            {
+              title: "Outlook",
+              message: arg,
+              icon: path.join(__dirname, "../../build/icons/128x128.png"),
+              timeout: 60000
+            },
+            function(err, data) {
+              console.log(err, data);
+            }
+          )
+          .on("click", function() {
+            console.log(arguments);
+          });
+        alreadyDisplayed.push(title);
       }
     });
 

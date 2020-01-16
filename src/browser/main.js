@@ -10,9 +10,11 @@
     console.log("filling Email");
     findEmailInput().value = email;
     if (findEmailInput().value === email) {
-      console.log(findNextButton());
-      findNextButton().focus();
-      findNextButton().click();
+      rndTime = (Math.random() + 1) * 1000;
+      window.setTimeout(() => {
+        findNextButton().focus();
+        findNextButton().click();
+      }, rndTime);
     }
   }
   function createEvents() {
@@ -25,7 +27,7 @@
     if (!!findNotificationPopup()) {
       console.log("Notification poupup found");
       content = findNotificationPopup();
-      console.log(content);
+      console.log(content.innerText);
       ipcRenderer.send("eventNotification", content.innerText);
     }
   }
