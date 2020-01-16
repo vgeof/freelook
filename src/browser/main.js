@@ -27,8 +27,10 @@
     if (!!findNotificationPopup()) {
       console.log("Notification poupup found");
       content = findNotificationPopup();
-      console.log(content.innerText);
-      ipcRenderer.send("eventNotification", content.innerText);
+      ipcRenderer.send(
+        "eventNotification",
+        Array.from(content).map(elt => elt.innerText)
+      );
     }
   }
   function isLoginPage() {
@@ -42,21 +44,24 @@
   }
   function findNotificationPopup() {
     // OWA 2010
-    popup = document.querySelector("#spnRmT.alertBtnTxt");
-    if (!!popup) return popup;
+    popup = document.querySelectorAll("#spnRmT.alertBtnTxt");
+    if (popup.length > 0) return popup;
     // OWA 2013
-    popup = document.querySelector("[aria-label='New Notification']");
-    if (!!popup) return popup;
+    popup = document.querySelectorAll("[aria-label='New Notification']");
+    if (popup.length > 0) return popup;
     // 365 new check
-    popup = document.querySelector(
+    popup = document.querySelectorAll(
       ".o365cs-notifications-notificationPopup .o365cs-notifications-notificationHeaderText"
     );
-    if (!!popup) return popup;
+    if (popup.length > 0) return popup;
     // 365 old check
-    popup = document.querySelector(".o365cs-notifications-notificationCounter");
-    if (!!popup) return popup;
+    popup = document.querySelectorAll(
+      ".o365cs-notifications-notificationCounter"
+    );
+    if (popup.length > 0) return popup;
     // outlook.live.com beta
-    popup = document.querySelector('[data-storybook="reminder"]');
-    if (!!popup) return popup;
+    popup = document.querySelectorAll('[data-storybook="reminder"]');
+    console.log(popup);
+    if (popup.length > 0) return popup;
   }
 })();

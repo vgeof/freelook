@@ -96,30 +96,35 @@ class MailWindowController {
       event.sender.send("fillEmail", email);
     });
     let alreadyDisplayed = [];
-    ipcMain.on("eventNotification", (_, arg) => {
+    ipcMain.on("eventNotification", (_, args) => {
       console.log(alreadyDisplayed);
-      const splitted = arg.split("\n");
-      const title = splitted[0];
+      console.log(args);
+      args.forEach(arg => {
+        console.log(arg);
 
-      if (!alreadyDisplayed.includes(title)) {
-        console.log("sending notification ");
-        notifier
-          .notify(
-            {
-              title: "Outlook",
-              message: arg,
-              icon: path.join(__dirname, "../../build/icons/128x128.png"),
-              timeout: 60000
-            },
-            function(err, data) {
-              console.log(err, data);
-            }
-          )
-          .on("click", function() {
-            console.log(arguments);
-          });
-        alreadyDisplayed.push(title);
-      }
+        const splitted = arg.split("\n");
+        const title = splitted[0];
+
+        if (!alreadyDisplayed.includes(title)) {
+          console.log("sending notification ");
+          notifier
+            .notify(
+              {
+                title: "Outlook",
+                message: arg,
+                icon: path.join(__dirname, "../../build/icons/128x128.png"),
+                timeout: 60000
+              },
+              function(err, data) {
+                console.log(err, data);
+              }
+            )
+            .on("click", function() {
+              console.log(arguments);
+            });
+          alreadyDisplayed.push(title);
+        }
+      });
     });
 
     // Open the new window in external browser
