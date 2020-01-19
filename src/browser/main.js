@@ -1,10 +1,11 @@
 (function() {
   const { ipcRenderer, remote } = require("electron");
   ipcRenderer.on("fillEmail", (_, arg) => fillEmail(arg));
+  ipcRenderer.on("goToLogin", goToLogin);
   window.setInterval(function() {
     console.log("heartbeat...");
     createEvents();
-  }, 1000);
+  }, 2000);
 
   function fillEmail(email) {
     console.log("filling Email");
@@ -17,11 +18,18 @@
       }, rndTime);
     }
   }
+  function goToLogin() {
+    console.log("going to Login page");
+    findHomeConnexionButton().focus();
+    findHomeConnexionButton().click();
+  }
   function createEvents() {
     // send an event when the login screen asking for email appears
     if (!!isLoginPage() && !!findEmailInput()) {
-      const reply = ipcRenderer.send("emailPrompt");
-      console.log(reply);
+      ipcRenderer.send("emailPrompt");
+    }
+    if (!!isLoginPage() && !!findPasswordInput()) {
+      ipcRenderer.send("passwordPrompt");
     }
     // send an event when a notification for an event appears
     if (!!findNotificationPopup()) {
@@ -32,12 +40,34 @@
         Array.from(content).map(elt => elt.innerText)
       );
     }
+    if (!!findHomeConnexionButton()) {
+      ipcRenderer.send("homeConnexionReady");
+    }
+    if (isInboxPage()) {
+      console.log("sending onInbox");
+      ipcRenderer.send("onInbox");
+    }
+  }
+  function isInboxPage() {
+    return document.URL.includes("https://outlook.live.com/mail/");
   }
   function isLoginPage() {
     return document.URL.includes("login");
   }
+  function findHomeConnexionButton() {
+    return document.querySelector("[data-task=signin]");
+  }
   function findEmailInput() {
     return document.querySelector("input[type=email]");
+  }
+  function findPasswordInput() {
+    const hiddenPasswordInput = document.querySelector(
+      "input[type=password].moveOffScreen"
+    );
+    if (!!hiddenPasswordInput) {
+      return null; // we don't care about the "preloaded password prompte which is hidden"
+    }
+    return document.querySelector("input[type=password]");
   }
   function findNextButton() {
     return document.querySelector("input[type=submit]");
@@ -61,7 +91,6 @@
     if (popup.length > 0) return popup;
     // outlook.live.com beta
     popup = document.querySelectorAll('[data-storybook="reminder"]');
-    console.log(popup);
     if (popup.length > 0) return popup;
   }
 })();

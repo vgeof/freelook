@@ -4,7 +4,7 @@ const {
   shell,
   ipcMain,
   Notification,
-  Session
+  session
 } = require("electron");
 const notifier = require("node-notifier");
 const settings = require("electron-settings");
@@ -56,6 +56,7 @@ class MailWindowController {
     this.win.webContents.setUserAgent(
       "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko/20100101 Firefox/72.0"
     );
+    session.defaultSession.clearStorageData();
 
     // and load the index.html of the app.
     this.win.loadURL(homepageUrl);
@@ -64,7 +65,20 @@ class MailWindowController {
     ipcMain.on("show", () => {
       this.show();
     });
-    this.show();
+    let firstShowDone = false;
+    let firstInboxPage = true;
+    ipcMain.on("onInbox", () => {
+      if (firstInboxPage) {
+        console.log("arrived on inbox, showing page");
+        this.splashWin.destroy();
+
+        if (!firstShowDone) this.show();
+        firstInboxPage = false;
+      }
+    });
+    setTimeout(() => {
+      if (!firstShowDone) this.show();
+    }, 20000);
 
     // insert styles
     //this.win.webContents.on('dom-ready', () => {
@@ -91,11 +105,27 @@ class MailWindowController {
       // when you should delete the corresponding element.
       this.win = null;
     });
+
+    let loginFirstTry = true;
     ipcMain.on("emailPrompt", (event, _) => {
-      const email = settings.get("default-email");
-      event.sender.send("fillEmail", email);
+      if (loginFirstTry) {
+        const email = settings.get("default-email");
+        event.sender.send("fillEmail", email);
+        this.splashWin.webContents.send("fillEmail", email);
+        loginFirstTry = false;
+      }
+    });
+    let firstPasswordPrompt = true;
+    ipcMain.on("passwordPrompt", (event, _) => {
+      if (firstPasswordPrompt) {
+        this.show();
+        firstPasswordPrompt = false;
+      }
     });
     let alreadyDisplayed = [];
+    ipcMain.on("homeConnexionReady", (event, _) => {
+      event.sender.send("goToLogin");
+    });
     ipcMain.on("eventNotification", (_, args) => {
       console.log(alreadyDisplayed);
       console.log(args);
@@ -113,7 +143,7 @@ class MailWindowController {
                 title: "Outlook",
                 message: arg,
                 icon: path.join(__dirname, "../../build/icons/128x128.png"),
-                timeout: 60000
+                timeout: 600000
               },
               function(err, data) {
                 console.log(err, data);
@@ -129,69 +159,6 @@ class MailWindowController {
 
     // Open the new window in external browser
     this.win.webContents.on("new-window", this.openInBrowser);
-  }
-
-  addUnreadNumberObserver() {
-    this.win.webContents.executeJavaScript(`
-            setTimeout(() => {
-                let unreadSpan = document.querySelector('._2iKri0mE1PM9vmRn--wKyI');
-                require('electron').ipcRenderer.send('updateUnread', unreadSpan.hasChildNodes());
-
-                let observer = new MutationObserver(mutations => {
-                    mutations.forEach(mutation => {
-                        // console.log('Observer Changed.');
-                        require('electron').ipcRenderer.send('updateUnread', unreadSpan.hasChildNodes());
-
-                        // Scrape messages and pop up a notification
-                        var messages = document.querySelectorAll('div[role="listbox"][aria-label="Message list"]');
-                        if (messages.length)
-                        {
-                            var unread = messages[0].querySelectorAll('div[aria-label^="Unread"]');
-                            var body = "";
-                            for (var i = 0; i < unread.length; i++)
-                            {
-                                if (body.length)
-                                {
-                                    body += "\\n";
-                                }
-                                body += unread[i].getAttribute("aria-label").substring(7, 127);
-                            }
-                            if (unread.length)
-                            {
-                                var notification = new Notification(unread.length + " New Messages", {
-                                    body: body,
-                                    icon: "assets/outlook_linux_black.png"
-                                });
-                                notification.onclick = () => {
-                                    require('electron').ipcRenderer.send('show');
-                                };
-                            }
-                        }
-                    });
-                });
-            
-                observer.observe(unreadSpan, {childList: true});
-
-                // If the div containing reminders gets taller we probably got a new
-                // reminder, so force the window to the top.
-                let reminders = document.getElementsByClassName("_1BWPyOkN5zNVyfbTDKK1gM");
-                let height = 0;
-                let reminderObserver = new MutationObserver(mutations => {
-                    mutations.forEach(mutation => {
-                        if (reminders[0].clientHeight > height)
-                        {
-                            require('electron').ipcRenderer.send('show');
-                        }
-                        height = reminders[0].clientHeight;
-                    });
-                });
-
-                if (reminders.length) {
-                    reminderObserver.observe(reminders[0], { childList: true });
-                }
-
-            }, 10000);
-        `);
   }
 
   toggleWindow() {
@@ -247,7 +214,6 @@ class MailWindowController {
     (async () => await isOnline({ timeout: 15000 }))().then(result => {
       if (result) {
         this.init();
-        this.splashWin.destroy();
       } else {
         this.splashWin.webContents.send("connect-timeout");
       }
