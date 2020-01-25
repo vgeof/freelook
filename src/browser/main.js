@@ -49,7 +49,7 @@
     }
   }
   function isInboxPage() {
-    return document.URL.includes("https://outlook.live.com/mail/");
+    return document.URL.includes("https://outlook.live.com/mail/") || document.URL.includes("https://outlook.office365.com/mail/inbox");
   }
   function isLoginPage() {
     return document.URL.includes("login");
