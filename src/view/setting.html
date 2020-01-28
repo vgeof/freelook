@@ -49,25 +49,23 @@
           </div>
         </h3>
 
-        <div
+        <select
           id="homepageUrl"
           class="ui floating fluid dropdown labeled search icon button"
         >
           <i class="home icon"></i>
           <span class="text">Select URL</span>
-          <div class="menu">
-            <!--                <div class="header">-->
-            <!--                    Add URL-->
-            <!--                </div>-->
-            <!--                <div class="ui right icon input">-->
-            <!--                    <i class="search icon"></i>-->
-            <!--                    <input type="text" name="search" placeholder="Microsoft URL...">-->
-            <!--                </div>-->
-            <!--                <div class="divider"></div>-->
-            <div class="item">https://outlook.live.com/mail</div>
-            <div class="item">https://outlook.office.com/mail</div>
-          </div>
-        </div>
+          <!--                <div class="header">-->
+          <!--                    Add URL-->
+          <!--                </div>-->
+          <!--                <div class="ui right icon input">-->
+          <!--                    <i class="search icon"></i>-->
+          <!--                    <input type="text" name="search" placeholder="Microsoft URL...">-->
+          <!--                </div>-->
+          <!--                <div class="divider"></div>-->
+          <option class="item">https://outlook.live.com/mail</option>
+          <option class="item">https://outlook.office.com/mail</option>
+        </select>
         <h3 id="default-email" class="ui header">
           <div class="content">
             Default mail address
@@ -77,12 +75,10 @@
           <input type="text" placeholder="test@example.com" />
         </div>
       </div>
+      <button id="saveButton">Save</button>
+      <button id="cancelButton">Cancel</button>
+      <button id="resetButton">Reset to Default</button>
     </div>
-
-    <script>
-      window.$ = window.jQuery = require("../../resources/jquery-3.4.1.min.js");
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
     <script>
       require("../mainProcess/setting.js");
     </script>
